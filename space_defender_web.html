@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Space Defender - Web Version</title>
+    <style>
+        body { font-family: monospace; background: black; color: green; }
+        .game { white-space: pre; font-size: 12px; }
+        .controls { margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>🚀 Space Defender - Web Version</h1>
+    <div class="game" id="gameArea"></div>
+    <div class="controls">
+        <p>Controls: A/D to move, S to shoot, R to restart</p>
+        <p>Score: <span id="score">0</span> | Lives: <span id="lives">3</span></p>
+    </div>
+    
+    <script>
+        class WebSpaceDefender {
+            constructor() {
+                this.width = 40;
+                this.height = 15;
+                this.playerX = Math.floor(this.width / 2);
+                this.playerY = this.height - 2;
+                this.enemies = [];
+                this.bullets = [];
+                this.score = 0;
+                this.lives = 3;
+                this.gameOver = false;
+                this.enemySpawnTimer = 0;
+                this.enemySpawnRate = 20;
+                
+                this.setupEventListeners();
+                this.gameLoop();
+            }
+            
+            setupEventListeners() {
+                document.addEventListener('keydown', (e) => {
+                    if (this.gameOver && e.key.toLowerCase() === 'r') {
+                        this.restart();
+                        return;
+                    }
+                    if (this.gameOver) return;
+                    
+                    switch(e.key.toLowerCase()) {
+                        case 'a': this.movePlayer(-1); break;
+                        case 'd': this.movePlayer(1); break;
+                        case 's': this.shoot(); break;
+                    }
+                });
+            }
+            
+            movePlayer(direction) {
+                this.playerX = Math.max(0, Math.min(this.width - 1, this.playerX + direction));
+            }
+            
+            shoot() {
+                this.bullets.push({x: this.playerX, y: this.playerY - 1, direction: -1});
+            }
+            
+            spawnEnemy() {
+                if (this.enemySpawnTimer <= 0) {
+                    this.enemies.push({
+                        x: Math.floor(Math.random() * this.width),
+                        y: 0,
+                        speed: 0.5 + Math.random()
+                    });
+                    this.enemySpawnTimer = this.enemySpawnRate;
+                } else {
+                    this.enemySpawnTimer--;
+                }
+            }
+            
+            update() {
+                if (this.gameOver) return;
+                
+                this.spawnEnemy();
+                
+                // Update enemies
+                this.enemies = this.enemies.filter(enemy => {
+                    enemy.y += enemy.speed;
+                    if (enemy.y >= this.height) {
+                        this.lives--;
+                        if (this.lives <= 0) this.gameOver = true;
+                        return false;
+                    }
+                    return true;
+                });
+                
+                // Update bullets
+                this.bullets = this.bullets.filter(bullet => {
+                    bullet.y += bullet.direction;
+                    return bullet.y >= 0 && bullet.y < this.height;
+                });
+                
+                // Check collisions
+                this.checkCollisions();
+                
+                // Update level
+                const newLevel = Math.floor(this.score / 100) + 1;
+                if (newLevel > this.level) {
+                    this.level = newLevel;
+                    this.enemySpawnRate = Math.max(5, this.enemySpawnRate - 2);
+                }
+            }
+            
+            checkCollisions() {
+                // Bullet vs Enemy
+                for (let i = this.bullets.length - 1; i >= 0; i--) {
+                    for (let j = this.enemies.length - 1; j >= 0; j--) {
+                        if (this.bullets[i].x === this.enemies[j].x && 
+                            Math.abs(this.bullets[i].y - this.enemies[j].y) < 1) {
+                            this.bullets.splice(i, 1);
+                            this.enemies.splice(j, 1);
+                            this.score += 10;
+                            break;
+                        }
+                    }
+                }
+                
+                // Enemy vs Player
+                for (let enemy of this.enemies) {
+                    if (enemy.x === this.playerX && Math.abs(enemy.y - this.playerY) < 1) {
+                        this.lives--;
+                        if (this.lives <= 0) this.gameOver = true;
+                        this.enemies = this.enemies.filter(e => e !== enemy);
+                        break;
+                    }
+                }
+            }
+            
+            draw() {
+                let display = '+' + '-'.repeat(this.width) + '+\n';
+                
+                for (let y = 0; y < this.height; y++) {
+                    let line = '|';
+                    for (let x = 0; x < this.width; x++) {
+                        let char = ' ';
+                        
+                        if (x === this.playerX && y === this.playerY) {
+                            char = '^';
+                        } else {
+                            for (let enemy of this.enemies) {
+                                if (enemy.x === x && Math.floor(enemy.y) === y) {
+                                    char = 'V';
+                                    break;
+                                }
+                            }
+                            if (char === ' ') {
+                                for (let bullet of this.bullets) {
+                                    if (bullet.x === x && Math.floor(bullet.y) === y) {
+                                        char = '|';
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        
+                        line += char;
+                    }
+                    line += '|\n';
+                    display += line;
+                }
+                
+                display += '+' + '-'.repeat(this.width) + '+';
+                
+                if (this.gameOver) {
+                    display += '\n\nGAME OVER! Press R to restart';
+                }
+                
+                document.getElementById('gameArea').textContent = display;
+                document.getElementById('score').textContent = this.score;
+                document.getElementById('lives').textContent = this.lives;
+            }
+            
+            restart() {
+                this.playerX = Math.floor(this.width / 2);
+                this.playerY = this.height - 2;
+                this.enemies = [];
+                this.bullets = [];
+                this.score = 0;
+                this.lives = 3;
+                this.gameOver = false;
+                this.enemySpawnRate = 20;
+            }
+            
+            gameLoop() {
+                this.update();
+                this.draw();
+                setTimeout(() => this.gameLoop(), 100);
+            }
+        }
+        
+        // Start the game
+        new WebSpaceDefender();
+    </script>
+</body>
+</html>
