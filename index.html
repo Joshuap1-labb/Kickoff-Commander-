@@ -1,1 +1,638 @@
-<div>import React from 'react';</div><div>import { GameData } from '../types/game';</div><div>import MobileInstall from './MobileInstall';</div><div><br></div><div>interface SettingsProps {</div><div>&nbsp; gameData: GameData;</div><div>&nbsp; updateGameData: (data: GameData) =&gt; void;</div><div>}</div><div><br></div><div>const Settings: React.FC&lt;SettingsProps&gt; = ({ gameData, updateGameData }) =&gt; {</div><div>&nbsp; const resetGame = () =&gt; {</div><div>&nbsp; &nbsp; if (window.confirm('Are you sure you want to reset the game? This will delete all progress.')) {</div><div>&nbsp; &nbsp; &nbsp; localStorage.removeItem('footballManagerSave');</div><div>&nbsp; &nbsp; &nbsp; window.location.reload();</div><div>&nbsp; &nbsp; }</div><div>&nbsp; };</div><div><br></div><div>&nbsp; const exportSave = () =&gt; {</div><div>&nbsp; &nbsp; const saveData = JSON.stringify(gameData, null, 2);</div><div>&nbsp; &nbsp; const blob = new Blob([saveData], { type: 'application/json' });</div><div>&nbsp; &nbsp; const url = URL.createObjectURL(blob);</div><div>&nbsp; &nbsp; const a = document.createElement('a');</div><div>&nbsp; &nbsp; a.href = url;</div><div>&nbsp; &nbsp; a.download = `football-manager-save-${gameData.playerClub.name.replace(/\s+/g, '-').toLowerCase()}.json`;</div><div>&nbsp; &nbsp; document.body.appendChild(a);</div><div>&nbsp; &nbsp; a.click();</div><div>&nbsp; &nbsp; document.body.removeChild(a);</div><div>&nbsp; &nbsp; URL.revokeObjectURL(url);</div><div>&nbsp; };</div><div><br></div><div>&nbsp; const importSave = (event: React.ChangeEvent&lt;HTMLInputElement&gt;) =&gt; {</div><div>&nbsp; &nbsp; const file = event.target.files?.[0];</div><div>&nbsp; &nbsp; if (!file) return;</div><div><br></div><div>&nbsp; &nbsp; const reader = new FileReader();</div><div>&nbsp; &nbsp; reader.onload = (e) =&gt; {</div><div>&nbsp; &nbsp; &nbsp; try {</div><div>&nbsp; &nbsp; &nbsp; &nbsp; const saveData = JSON.parse(e.target?.result as string);</div><div>&nbsp; &nbsp; &nbsp; &nbsp; updateGameData(saveData);</div><div>&nbsp; &nbsp; &nbsp; &nbsp; alert('Save file imported successfully!');</div><div>&nbsp; &nbsp; &nbsp; } catch (error) {</div><div>&nbsp; &nbsp; &nbsp; &nbsp; alert('Invalid save file format.');</div><div>&nbsp; &nbsp; &nbsp; }</div><div>&nbsp; &nbsp; };</div><div>&nbsp; &nbsp; reader.readAsText(file);</div><div>&nbsp; };</div><div><br></div><div>&nbsp; const downloadGameFiles = async () =&gt; {</div><div>&nbsp; &nbsp; try {</div><div>&nbsp; &nbsp; &nbsp; const standaloneGameHtml = `&lt;!DOCTYPE html&gt;</div><div>&lt;html lang="en"&gt;</div><div>&lt;head&gt;</div><div>&nbsp; &nbsp; &lt;meta charset="UTF-8"&gt;</div><div>&nbsp; &nbsp; &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</div><div>&nbsp; &nbsp; &lt;title&gt;Kickoff Commander - Standalone&lt;/title&gt;</div><div>&nbsp; &nbsp; &lt;style&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; * { margin: 0; padding: 0; box-sizing: border-box; }</div><div>&nbsp; &nbsp; &nbsp; &nbsp; body {&nbsp;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; font-family: system-ui, -apple-system, sans-serif;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; color: white;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; min-height: 100vh;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; overflow-x: hidden;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; }</div><div>&nbsp; &nbsp; &nbsp; &nbsp; .game-container {</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; width: 100vw;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; height: 100vh;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; display: flex;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; flex-direction: column;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; }</div><div>&nbsp; &nbsp; &nbsp; &nbsp; .header {</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; background: rgba(0,0,0,0.8);</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; padding: 1rem;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; border-bottom: 2px solid #00ff00;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; text-align: center;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; }</div><div>&nbsp; &nbsp; &nbsp; &nbsp; .header h1 {</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; color: #00ff00;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; font-size: 2rem;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; font-weight: bold;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; text-shadow: 0 0 10px rgba(0,255,0,0.5);</div><div>&nbsp; &nbsp; &nbsp; &nbsp; }</div><div>&nbsp; &nbsp; &nbsp; &nbsp; .game-area {</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; flex: 1;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; padding: 2rem;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; display: flex;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; flex-direction: column;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; align-items: center;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; justify-content: center;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; text-align: center;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; }</div><div>&nbsp; &nbsp; &nbsp; &nbsp; .game-panel {</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; background: rgba(255,255,255,0.1);</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; backdrop-filter: blur(10px);</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; border-radius: 12px;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; padding: 2rem;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; border: 1px solid rgba(255,255,255,0.2);</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; max-width: 600px;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; width: 100%;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; }</div><div>&nbsp; &nbsp; &nbsp; &nbsp; .button {</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; background: linear-gradient(135deg, #00ff00, #00cc00);</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; color: black;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; border: none;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; padding: 1rem 2rem;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; font-size: 1.1rem;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; font-weight: bold;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; border-radius: 8px;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; cursor: pointer;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; transition: all 0.3s ease;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; box-shadow: 0 4px 15px rgba(0,255,0,0.3);</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; margin: 0.5rem;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; }</div><div>&nbsp; &nbsp; &nbsp; &nbsp; .button:hover {</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; transform: translateY(-2px);</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; box-shadow: 0 6px 20px rgba(0,255,0,0.4);</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; background: linear-gradient(135deg, #00cc00, #009900);</div><div>&nbsp; &nbsp; &nbsp; &nbsp; }</div><div>&nbsp; &nbsp; &nbsp; &nbsp; .status {</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; margin: 1rem 0;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; padding: 1rem;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; background: rgba(0,255,0,0.1);</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; border-radius: 8px;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; border: 1px solid rgba(0,255,0,0.3);</div><div>&nbsp; &nbsp; &nbsp; &nbsp; }</div><div>&nbsp; &nbsp; &nbsp; &nbsp; .club-info {</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; display: grid;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; gap: 1rem;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; margin: 2rem 0;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; }</div><div>&nbsp; &nbsp; &nbsp; &nbsp; .info-card {</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; background: rgba(255,255,255,0.05);</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; padding: 1rem;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; border-radius: 8px;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; border: 1px solid rgba(255,255,255,0.1);</div><div>&nbsp; &nbsp; &nbsp; &nbsp; }</div><div>&nbsp; &nbsp; &nbsp; &nbsp; .info-card h3 {</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; color: #00ff00;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; margin-bottom: 0.5rem;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; }</div><div>&nbsp; &nbsp; &nbsp; &nbsp; .controls {</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; display: flex;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; flex-wrap: wrap;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; gap: 1rem;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; justify-content: center;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; margin: 2rem 0;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; }</div><div>&nbsp; &nbsp; &nbsp; &nbsp; .hidden { display: none; }</div><div>&nbsp; &nbsp; &nbsp; &nbsp; input[type="file"] { display: none; }</div><div>&nbsp; &nbsp; &nbsp; &nbsp; @media (max-width: 768px) {</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; .header h1 { font-size: 1.5rem; }</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; .game-area { padding: 1rem; }</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; .controls { flex-direction: column; align-items: center; }</div><div>&nbsp; &nbsp; &nbsp; &nbsp; }</div><div>&nbsp; &nbsp; &lt;/style&gt;</div><div>&lt;/head&gt;</div><div>&lt;body&gt;</div><div>&nbsp; &nbsp; &lt;div class="game-container"&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &lt;div class="header"&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;h1&gt;⚽ Kickoff Commander - Standalone&lt;/h1&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &lt;/div&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &lt;div class="game-area"&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;div id="welcome-screen" class="game-panel"&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;h2&gt;Football Management Simulator&lt;/h2&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;p&gt;Complete offline football management experience&lt;/p&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;div class="controls"&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;button class="button" onclick="startNewGame()"&gt;🆕 New Game&lt;/button&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;button class="button" onclick="loadSaveFile()"&gt;📁 Load Save&lt;/button&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;/div&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;input type="file" id="saveFile" accept=".json" onchange="handleSaveFile(event)"&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;div id="status" class="status hidden"&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Ready to start your football management journey!</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;/div&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;/div&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;div id="game-screen" class="game-panel hidden"&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;h2 id="clubName"&gt;Your Club&lt;/h2&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;div class="club-info"&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;div class="info-card"&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;h3&gt;💰 Budget&lt;/h3&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;p id="budget"&gt;$0&lt;/p&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;/div&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;div class="info-card"&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;h3&gt;🏆 League&lt;/h3&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;p id="league"&gt;-&lt;/p&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;/div&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;div class="info-card"&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;h3&gt;👥 Squad Size&lt;/h3&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;p id="squadSize"&gt;0&lt;/p&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;/div&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;div class="info-card"&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;h3&gt;📅 Season&lt;/h3&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;p id="season"&gt;-&lt;/p&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;/div&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;/div&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;div class="controls"&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;button class="button" onclick="advanceWeek()"&gt;⏭️ Next Week&lt;/button&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;button class="button" onclick="viewSquad()"&gt;👥 Squad&lt;/button&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;button class="button" onclick="exportGame()"&gt;💾 Export Save&lt;/button&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;button class="button" onclick="newGame()"&gt;🔄 New Game&lt;/button&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;/div&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;div id="gameStatus" class="status"&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Welcome to your football management career!</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;/div&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;/div&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &lt;/div&gt;</div><div>&nbsp; &nbsp; &lt;/div&gt;</div><div><br></div><div>&nbsp; &nbsp; &lt;script&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; let gameData = ${JSON.stringify(gameData, null, 2)};</div><div>&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; function startNewGame() {</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; // Initialize new game data if none exists</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; if (!gameData || !gameData.playerClub) {</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; gameData = {</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; playerClub: {</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; name: "Your Team",</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; league: "Premier League",</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; budget: 50000000,</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; players: []</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; },</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; season: "2024/25",</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; currentDate: { year: 2024, month: 8, day: 1 }</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; };</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; showGameScreen();</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; updateGameDisplay();</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; updateStatus("Game started! Manage your team to glory!");</div><div>&nbsp; &nbsp; &nbsp; &nbsp; }</div><div>&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; function loadSaveFile() {</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; document.getElementById('saveFile').click();</div><div>&nbsp; &nbsp; &nbsp; &nbsp; }</div><div>&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; function handleSaveFile(event) {</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; const file = event.target.files[0];</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; if (!file) return;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; const reader = new FileReader();</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; reader.onload = function(e) {</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; try {</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; const loadedData = JSON.parse(e.target.result);</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; gameData = loadedData;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; showGameScreen();</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; updateGameDisplay();</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; updateStatus("Save file loaded successfully!");</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; } catch (error) {</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; updateStatus("Error loading save file. Please check the file format.");</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; };</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; reader.readAsText(file);</div><div>&nbsp; &nbsp; &nbsp; &nbsp; }</div><div>&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; function showGameScreen() {</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; document.getElementById('welcome-screen').classList.add('hidden');</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; document.getElementById('game-screen').classList.remove('hidden');</div><div>&nbsp; &nbsp; &nbsp; &nbsp; }</div><div>&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; function newGame() {</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; if (confirm('Start a new game? This will reset all progress.')) {</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; document.getElementById('game-screen').classList.add('hidden');</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; document.getElementById('welcome-screen').classList.remove('hidden');</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; document.getElementById('status').classList.add('hidden');</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }</div><div>&nbsp; &nbsp; &nbsp; &nbsp; }</div><div>&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; function updateGameDisplay() {</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; if (!gameData || !gameData.playerClub) return;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; document.getElementById('clubName').textContent = gameData.playerClub.name || 'Your Club';</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; document.getElementById('budget').textContent = '$' + (gameData.playerClub.budget || 0).toLocaleString();</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; document.getElementById('league').textContent = gameData.playerClub.league || 'Unknown League';</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; document.getElementById('squadSize').textContent = (gameData.playerClub.players?.length || 0) + ' players';</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; document.getElementById('season').textContent = gameData.season || '2024/25';</div><div>&nbsp; &nbsp; &nbsp; &nbsp; }</div><div>&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; function updateStatus(message) {</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; const statusEl = document.getElementById('gameStatus');</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; if (statusEl) {</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; statusEl.textContent = message;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }</div><div>&nbsp; &nbsp; &nbsp; &nbsp; }</div><div>&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; function advanceWeek() {</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; if (!gameData.currentDate) {</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; gameData.currentDate = { year: 2024, month: 8, day: 1 };</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; gameData.currentDate.day += 7;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; if (gameData.currentDate.day &gt; 30) {</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; gameData.currentDate.day = gameData.currentDate.day - 30;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; gameData.currentDate.month += 1;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; if (gameData.currentDate.month &gt; 12) {</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; gameData.currentDate.month = 1;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; gameData.currentDate.year += 1;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; updateStatus('Week advanced! New challenges await...');</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; updateGameDisplay();</div><div>&nbsp; &nbsp; &nbsp; &nbsp; }</div><div>&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; function viewSquad() {</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; const squadCount = gameData.playerClub.players?.length || 0;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; updateStatus('Squad: ' + squadCount + ' players. Use the full game to manage individual players.');</div><div>&nbsp; &nbsp; &nbsp; &nbsp; }</div><div>&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; function exportGame() {</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; const saveData = JSON.stringify(gameData, null, 2);</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; const blob = new Blob([saveData], { type: 'application/json' });</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; const url = URL.createObjectURL(blob);</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; const a = document.createElement('a');</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; a.href = url;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; a.download = 'kickoff-commander-save.json';</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; document.body.appendChild(a);</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; a.click();</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; document.body.removeChild(a);</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; URL.revokeObjectURL(url);</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; updateStatus('Game saved successfully!');</div><div>&nbsp; &nbsp; &nbsp; &nbsp; }</div><div>&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; // Initialize</div><div>&nbsp; &nbsp; &nbsp; &nbsp; document.addEventListener('DOMContentLoaded', function() {</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; console.log('Kickoff Commander Standalone loaded');</div><div>&nbsp; &nbsp; &nbsp; &nbsp; });</div><div>&nbsp; &nbsp; &lt;/script&gt;</div><div>&lt;/body&gt;</div><div>&lt;/html&gt;`;</div><div><br></div><div>&nbsp; &nbsp; &nbsp; // Create and download the standalone file</div><div>&nbsp; &nbsp; &nbsp; const blob = new Blob([standaloneGameHtml], { type: 'text/html' });</div><div>&nbsp; &nbsp; &nbsp; const url = URL.createObjectURL(blob);</div><div>&nbsp; &nbsp; &nbsp; const a = document.createElement('a');</div><div>&nbsp; &nbsp; &nbsp; a.href = url;</div><div>&nbsp; &nbsp; &nbsp; a.download = 'kickoff-commander-standalone.html';</div><div>&nbsp; &nbsp; &nbsp; document.body.appendChild(a);</div><div>&nbsp; &nbsp; &nbsp; a.click();</div><div>&nbsp; &nbsp; &nbsp; document.body.removeChild(a);</div><div>&nbsp; &nbsp; &nbsp; URL.revokeObjectURL(url);</div><div><br></div><div>&nbsp; &nbsp; &nbsp; alert('Standalone game downloaded! Open the HTML file in any browser to play offline.');</div><div>&nbsp; &nbsp; } catch (error) {</div><div>&nbsp; &nbsp; &nbsp; console.error('Download failed:', error);</div><div>&nbsp; &nbsp; &nbsp; alert('Failed to download game files. Please try again.');</div><div>&nbsp; &nbsp; }</div><div>&nbsp; };</div><div><br></div><div>&nbsp; const formatDate = (date: typeof gameData.currentDate) =&gt; {</div><div>&nbsp; &nbsp; if (!date || !date.year || !date.month || !date.day) {</div><div>&nbsp; &nbsp; &nbsp; return 'Invalid Date';</div><div>&nbsp; &nbsp; }</div><div>&nbsp; &nbsp; const dateObj = new Date(date.year, date.month - 1, date.day);</div><div>&nbsp; &nbsp; return dateObj.toLocaleDateString('en-US', {&nbsp;</div><div>&nbsp; &nbsp; &nbsp; weekday: 'long',&nbsp;</div><div>&nbsp; &nbsp; &nbsp; year: 'numeric',&nbsp;</div><div>&nbsp; &nbsp; &nbsp; month: 'long',&nbsp;</div><div>&nbsp; &nbsp; &nbsp; day: 'numeric'&nbsp;</div><div>&nbsp; &nbsp; });</div><div>&nbsp; };</div><div><br></div><div>&nbsp; return (</div><div>&nbsp; &nbsp; &lt;div className="space-y-6"&gt;</div><div>&nbsp; &nbsp; &nbsp; {/* Mobile Installation Section */}</div><div>&nbsp; &nbsp; &nbsp; &lt;MobileInstall /&gt;</div><div>&nbsp; &nbsp; &nbsp;&nbsp;</div><div>&nbsp; &nbsp; &nbsp; &lt;div className="bg-white/10 backdrop-blur-md rounded-lg p-6 border border-white/20"&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &lt;h2 className="text-xl font-bold text-white mb-6"&gt;Game Information&lt;/h2&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &lt;div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8"&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;div className="space-y-4"&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;div&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;label className="text-white/70 text-sm"&gt;Club&lt;/label&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;p className="text-white font-medium"&gt;{gameData.playerClub.name}&lt;/p&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;/div&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;div&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;label className="text-white/70 text-sm"&gt;League&lt;/label&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;p className="text-white font-medium"&gt;{gameData.playerClub.league}&lt;/p&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;/div&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;div&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;label className="text-white/70 text-sm"&gt;Season&lt;/label&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;p className="text-white font-medium"&gt;{gameData.season}&lt;/p&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;/div&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;/div&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;div className="space-y-4"&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;div&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;label className="text-white/70 text-sm"&gt;Current Date&lt;/label&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;p className="text-white font-medium"&gt;{formatDate(gameData.currentDate)}&lt;/p&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;/div&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;div&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;label className="text-white/70 text-sm"&gt;Squad Size&lt;/label&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;p className="text-white font-medium"&gt;{gameData.playerClub.players?.length || 0} players&lt;/p&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;/div&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;div&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;label className="text-white/70 text-sm"&gt;Youth Players&lt;/label&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;p className="text-white font-medium"&gt;{gameData.playerClub.youthPlayers?.length || 0} players&lt;/p&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;/div&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;/div&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &lt;/div&gt;</div><div><br></div><div>&nbsp; &nbsp; &nbsp; &nbsp; &lt;div className="border-t border-white/20 pt-6"&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;h3 className="text-lg font-semibold text-white mb-4"&gt;Save Management&lt;/h3&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;div className="flex flex-wrap gap-4"&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;button</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; onClick={exportSave}</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Export Save</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;/button&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;label className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium cursor-pointer transition-colors"&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Import Save</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;input</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; type="file"</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; accept=".json"</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; onChange={importSave}</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; className="hidden"</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; /&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;/label&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;button</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; onClick={downloadGameFiles}</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 📱 Download Offline Game</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;/button&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;button</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; onClick={resetGame}</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Reset Game</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;/button&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;/div&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;div className="mt-4 p-4 bg-purple-500/20 border border-purple-500/30 rounded-lg"&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;p className="text-white/80 text-sm"&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;strong&gt;Offline Game:&lt;/strong&gt; Downloads HTML files that work without internet.&nbsp;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Includes your current save data and can be opened in any web browser.</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;/p&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;/div&gt;</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &lt;/div&gt;</div><div>&nbsp; &nbsp; &nbsp; &lt;/div&gt;</div><div>&nbsp; &nbsp; &lt;/div&gt;</div><div>&nbsp; );</div><div>};</div><div><br></div><div>export default Settings;</div><div><br></div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Defender - Arcade Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 50%, #16213e 100%);
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(ellipse at center, #1a1a2e 0%, #0c0c0c 100%);
+            overflow: hidden;
+        }
+
+        .stars {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(2px 2px at 20px 30px, #eee, transparent),
+                radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.8), transparent),
+                radial-gradient(1px 1px at 90px 40px, #fff, transparent),
+                radial-gradient(1px 1px at 130px 80px, rgba(255,255,255,0.6), transparent),
+                radial-gradient(2px 2px at 160px 30px, #fff, transparent);
+            background-repeat: repeat;
+            background-size: 200px 100px;
+            animation: twinkle 3s linear infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .game-ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #00ff00;
+            font-size: 18px;
+            font-weight: bold;
+            text-shadow: 0 0 10px #00ff00;
+            z-index: 10;
+        }
+
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: #ff0000;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            border: 2px solid #ff0000;
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.5);
+            z-index: 20;
+            display: none;
+        }
+
+        .start-screen {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: #00ff00;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            border: 2px solid #00ff00;
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.5);
+            z-index: 20;
+        }
+
+        .start-screen h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px #00ff00;
+        }
+
+        .start-screen p {
+            font-size: 1.2em;
+            margin-bottom: 30px;
+            color: #ccc;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #00ff00, #00cc00);
+            color: #000;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 255, 0, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 20px rgba(0, 255, 0, 0.5);
+        }
+
+        .player {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(45deg, #00ff00, #00cc00);
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            box-shadow: 0 0 20px #00ff00;
+            z-index: 5;
+        }
+
+        .enemy {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(45deg, #ff0000, #cc0000);
+            border-radius: 50%;
+            box-shadow: 0 0 15px #ff0000;
+            z-index: 5;
+        }
+
+        .bullet {
+            position: absolute;
+            width: 4px;
+            height: 10px;
+            background: #00ff00;
+            box-shadow: 0 0 10px #00ff00;
+            z-index: 5;
+        }
+
+        .enemy-bullet {
+            position: absolute;
+            width: 4px;
+            height: 10px;
+            background: #ff0000;
+            box-shadow: 0 0 10px #ff0000;
+            z-index: 5;
+        }
+
+        .explosion {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background: radial-gradient(circle, #ffff00, #ff6600, transparent);
+            border-radius: 50%;
+            animation: explode 0.5s ease-out forwards;
+            z-index: 6;
+        }
+
+        @keyframes explode {
+            0% { transform: scale(0); opacity: 1; }
+            100% { transform: scale(2); opacity: 0; }
+        }
+
+        .power-up {
+            position: absolute;
+            width: 25px;
+            height: 25px;
+            background: linear-gradient(45deg, #ffff00, #ffaa00);
+            border-radius: 50%;
+            box-shadow: 0 0 15px #ffff00;
+            animation: pulse 1s ease-in-out infinite alternate;
+            z-index: 5;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.2); }
+        }
+
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #ccc;
+            text-align: center;
+            z-index: 10;
+        }
+
+        @media (max-width: 768px) {
+            .game-ui {
+                font-size: 14px;
+                top: 10px;
+                left: 10px;
+            }
+            
+            .start-screen h1 {
+                font-size: 2em;
+            }
+            
+            .start-screen p {
+                font-size: 1em;
+            }
+            
+            .btn {
+                padding: 12px 24px;
+                font-size: 1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="stars"></div>
+        
+        <div class="start-screen" id="startScreen">
+            <h1>🚀 SPACE DEFENDER</h1>
+            <p>Defend Earth from alien invaders!</p>
+            <p>Use WASD or Arrow Keys to move, SPACE to shoot</p>
+            <button class="btn" onclick="startGame()">START GAME</button>
+        </div>
+
+        <div class="game-over" id="gameOver">
+            <h2>GAME OVER</h2>
+            <p>Final Score: <span id="finalScore">0</span></p>
+            <button class="btn" onclick="restartGame()">PLAY AGAIN</button>
+        </div>
+
+        <div class="game-ui">
+            <div>Score: <span id="score">0</span></div>
+            <div>Lives: <span id="lives">3</span></div>
+            <div>Level: <span id="level">1</span></div>
+        </div>
+
+        <div class="controls">
+            <p>WASD or Arrow Keys to move • SPACE to shoot</p>
+        </div>
+    </div>
+
+    <script>
+        class Game {
+            constructor() {
+                this.canvas = document.querySelector('.game-container');
+                this.player = null;
+                this.enemies = [];
+                this.bullets = [];
+                this.enemyBullets = [];
+                this.powerUps = [];
+                this.explosions = [];
+                this.score = 0;
+                this.lives = 3;
+                this.level = 1;
+                this.gameRunning = false;
+                this.keys = {};
+                this.lastEnemySpawn = 0;
+                this.lastPowerUpSpawn = 0;
+                this.enemySpawnRate = 2000;
+                this.powerUpSpawnRate = 10000;
+                this.playerSpeed = 5;
+                this.bulletSpeed = 8;
+                this.enemySpeed = 2;
+                this.enemyBulletSpeed = 4;
+                this.powerUpSpeed = 2;
+                this.lastShot = 0;
+                this.shotCooldown = 150;
+                this.enemyShotCooldown = 2000;
+                this.lastEnemyShot = 0;
+                this.powerUpActive = false;
+                this.powerUpTime = 0;
+                this.powerUpDuration = 5000;
+
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.createPlayer();
+                this.gameLoop();
+            }
+
+            setupEventListeners() {
+                document.addEventListener('keydown', (e) => {
+                    this.keys[e.code] = true;
+                    if (e.code === 'Space') {
+                        e.preventDefault();
+                        this.shoot();
+                    }
+                });
+
+                document.addEventListener('keyup', (e) => {
+                    this.keys[e.code] = false;
+                });
+            }
+
+            createPlayer() {
+                this.player = {
+                    x: this.canvas.offsetWidth / 2 - 20,
+                    y: this.canvas.offsetHeight - 60,
+                    width: 40,
+                    height: 40,
+                    speed: this.playerSpeed
+                };
+            }
+
+            startGame() {
+                this.gameRunning = true;
+                this.score = 0;
+                this.lives = 3;
+                this.level = 1;
+                this.enemies = [];
+                this.bullets = [];
+                this.enemyBullets = [];
+                this.powerUps = [];
+                this.explosions = [];
+                this.powerUpActive = false;
+                this.createPlayer();
+                document.getElementById('startScreen').style.display = 'none';
+                document.getElementById('gameOver').style.display = 'none';
+                this.updateUI();
+            }
+
+            gameLoop() {
+                if (this.gameRunning) {
+                    this.update();
+                    this.render();
+                }
+                requestAnimationFrame(() => this.gameLoop());
+            }
+
+            update() {
+                this.updatePlayer();
+                this.updateBullets();
+                this.updateEnemies();
+                this.updateEnemyBullets();
+                this.updatePowerUps();
+                this.updateExplosions();
+                this.spawnEnemies();
+                this.spawnPowerUps();
+                this.checkCollisions();
+                this.updateLevel();
+            }
+
+            updatePlayer() {
+                if (this.keys['KeyA'] || this.keys['ArrowLeft']) {
+                    this.player.x = Math.max(0, this.player.x - this.player.speed);
+                }
+                if (this.keys['KeyD'] || this.keys['ArrowRight']) {
+                    this.player.x = Math.min(this.canvas.offsetWidth - this.player.width, this.player.x + this.player.speed);
+                }
+                if (this.keys['KeyW'] || this.keys['ArrowUp']) {
+                    this.player.y = Math.max(0, this.player.y - this.player.speed);
+                }
+                if (this.keys['KeyS'] || this.keys['ArrowDown']) {
+                    this.player.y = Math.min(this.canvas.offsetHeight - this.player.height, this.player.y + this.player.speed);
+                }
+            }
+
+            shoot() {
+                const now = Date.now();
+                if (now - this.lastShot < this.shotCooldown) return;
+
+                this.bullets.push({
+                    x: this.player.x + this.player.width / 2 - 2,
+                    y: this.player.y,
+                    width: 4,
+                    height: 10,
+                    speed: this.bulletSpeed
+                });
+
+                this.lastShot = now;
+            }
+
+            updateBullets() {
+                this.bullets = this.bullets.filter(bullet => {
+                    bullet.y -= bullet.speed;
+                    return bullet.y > -bullet.height;
+                });
+            }
+
+            updateEnemies() {
+                this.enemies = this.enemies.filter(enemy => {
+                    enemy.y += enemy.speed;
+                    return enemy.y < this.canvas.offsetHeight + enemy.height;
+                });
+
+                // Enemy shooting
+                const now = Date.now();
+                if (now - this.lastEnemyShot > this.enemyShotCooldown && this.enemies.length > 0) {
+                    const randomEnemy = this.enemies[Math.floor(Math.random() * this.enemies.length)];
+                    this.enemyBullets.push({
+                        x: randomEnemy.x + randomEnemy.width / 2 - 2,
+                        y: randomEnemy.y + randomEnemy.height,
+                        width: 4,
+                        height: 10,
+                        speed: this.enemyBulletSpeed
+                    });
+                    this.lastEnemyShot = now;
+                }
+            }
+
+            updateEnemyBullets() {
+                this.enemyBullets = this.enemyBullets.filter(bullet => {
+                    bullet.y += bullet.speed;
+                    return bullet.y < this.canvas.offsetHeight + bullet.height;
+                });
+            }
+
+            updatePowerUps() {
+                this.powerUps = this.powerUps.filter(powerUp => {
+                    powerUp.y += this.powerUpSpeed;
+                    return powerUp.y < this.canvas.offsetHeight + powerUp.height;
+                });
+
+                if (this.powerUpActive && Date.now() - this.powerUpTime > this.powerUpDuration) {
+                    this.powerUpActive = false;
+                    this.shotCooldown = 150;
+                }
+            }
+
+            updateExplosions() {
+                this.explosions = this.explosions.filter(explosion => {
+                    explosion.time -= 16;
+                    return explosion.time > 0;
+                });
+            }
+
+            spawnEnemies() {
+                const now = Date.now();
+                if (now - this.lastEnemySpawn > this.enemySpawnRate) {
+                    this.enemies.push({
+                        x: Math.random() * (this.canvas.offsetWidth - 30),
+                        y: -30,
+                        width: 30,
+                        height: 30,
+                        speed: this.enemySpeed + Math.random() * 2
+                    });
+                    this.lastEnemySpawn = now;
+                }
+            }
+
+            spawnPowerUps() {
+                const now = Date.now();
+                if (now - this.lastPowerUpSpawn > this.powerUpSpawnRate && Math.random() < 0.1) {
+                    this.powerUps.push({
+                        x: Math.random() * (this.canvas.offsetWidth - 25),
+                        y: -25,
+                        width: 25,
+                        height: 25,
+                        type: 'rapidFire'
+                    });
+                    this.lastPowerUpSpawn = now;
+                }
+            }
+
+            checkCollisions() {
+                // Bullet vs Enemy
+                this.bullets.forEach((bullet, bulletIndex) => {
+                    this.enemies.forEach((enemy, enemyIndex) => {
+                        if (this.isColliding(bullet, enemy)) {
+                            this.createExplosion(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2);
+                            this.bullets.splice(bulletIndex, 1);
+                            this.enemies.splice(enemyIndex, 1);
+                            this.score += 10;
+                            this.updateUI();
+                        }
+                    });
+                });
+
+                // Enemy Bullet vs Player
+                this.enemyBullets.forEach((bullet, bulletIndex) => {
+                    if (this.isColliding(bullet, this.player)) {
+                        this.createExplosion(this.player.x + this.player.width / 2, this.player.y + this.player.height / 2);
+                        this.enemyBullets.splice(bulletIndex, 1);
+                        this.lives--;
+                        this.updateUI();
+                        if (this.lives <= 0) {
+                            this.gameOver();
+                        }
+                    }
+                });
+
+                // Enemy vs Player
+                this.enemies.forEach((enemy, enemyIndex) => {
+                    if (this.isColliding(enemy, this.player)) {
+                        this.createExplosion(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2);
+                        this.createExplosion(this.player.x + this.player.width / 2, this.player.y + this.player.height / 2);
+                        this.enemies.splice(enemyIndex, 1);
+                        this.lives--;
+                        this.updateUI();
+                        if (this.lives <= 0) {
+                            this.gameOver();
+                        }
+                    }
+                });
+
+                // PowerUp vs Player
+                this.powerUps.forEach((powerUp, powerUpIndex) => {
+                    if (this.isColliding(powerUp, this.player)) {
+                        this.powerUps.splice(powerUpIndex, 1);
+                        this.activatePowerUp(powerUp.type);
+                    }
+                });
+            }
+
+            isColliding(rect1, rect2) {
+                return rect1.x < rect2.x + rect2.width &&
+                       rect1.x + rect1.width > rect2.x &&
+                       rect1.y < rect2.y + rect2.height &&
+                       rect1.y + rect1.height > rect2.y;
+            }
+
+            createExplosion(x, y) {
+                this.explosions.push({
+                    x: x - 25,
+                    y: y - 25,
+                    time: 500
+                });
+            }
+
+            activatePowerUp(type) {
+                if (type === 'rapidFire') {
+                    this.powerUpActive = true;
+                    this.powerUpTime = Date.now();
+                    this.shotCooldown = 50;
+                }
+            }
+
+            updateLevel() {
+                const newLevel = Math.floor(this.score / 100) + 1;
+                if (newLevel > this.level) {
+                    this.level = newLevel;
+                    this.enemySpawnRate = Math.max(500, this.enemySpawnRate - 100);
+                    this.enemySpeed += 0.5;
+                    this.updateUI();
+                }
+            }
+
+            updateUI() {
+                document.getElementById('score').textContent = this.score;
+                document.getElementById('lives').textContent = this.lives;
+                document.getElementById('level').textContent = this.level;
+            }
+
+            gameOver() {
+                this.gameRunning = false;
+                document.getElementById('finalScore').textContent = this.score;
+                document.getElementById('gameOver').style.display = 'block';
+            }
+
+            restartGame() {
+                this.startGame();
+            }
+
+            render() {
+                // Clear previous frame
+                const elements = this.canvas.querySelectorAll('.player, .enemy, .bullet, .enemy-bullet, .power-up, .explosion');
+                elements.forEach(el => el.remove());
+
+                // Render player
+                const playerEl = document.createElement('div');
+                playerEl.className = 'player';
+                playerEl.style.left = this.player.x + 'px';
+                playerEl.style.top = this.player.y + 'px';
+                this.canvas.appendChild(playerEl);
+
+                // Render enemies
+                this.enemies.forEach(enemy => {
+                    const enemyEl = document.createElement('div');
+                    enemyEl.className = 'enemy';
+                    enemyEl.style.left = enemy.x + 'px';
+                    enemyEl.style.top = enemy.y + 'px';
+                    this.canvas.appendChild(enemyEl);
+                });
+
+                // Render bullets
+                this.bullets.forEach(bullet => {
+                    const bulletEl = document.createElement('div');
+                    bulletEl.className = 'bullet';
+                    bulletEl.style.left = bullet.x + 'px';
+                    bulletEl.style.top = bullet.y + 'px';
+                    this.canvas.appendChild(bulletEl);
+                });
+
+                // Render enemy bullets
+                this.enemyBullets.forEach(bullet => {
+                    const bulletEl = document.createElement('div');
+                    bulletEl.className = 'enemy-bullet';
+                    bulletEl.style.left = bullet.x + 'px';
+                    bulletEl.style.top = bullet.y + 'px';
+                    this.canvas.appendChild(bulletEl);
+                });
+
+                // Render power-ups
+                this.powerUps.forEach(powerUp => {
+                    const powerUpEl = document.createElement('div');
+                    powerUpEl.className = 'power-up';
+                    powerUpEl.style.left = powerUp.x + 'px';
+                    powerUpEl.style.top = powerUp.y + 'px';
+                    this.canvas.appendChild(powerUpEl);
+                });
+
+                // Render explosions
+                this.explosions.forEach(explosion => {
+                    const explosionEl = document.createElement('div');
+                    explosionEl.className = 'explosion';
+                    explosionEl.style.left = explosion.x + 'px';
+                    explosionEl.style.top = explosion.y + 'px';
+                    this.canvas.appendChild(explosionEl);
+                });
+            }
+        }
+
+        // Initialize game
+        const game = new Game();
+
+        function startGame() {
+            game.startGame();
+        }
+
+        function restartGame() {
+            game.restartGame();
+        }
+    </script>
+</body>
+</html>
